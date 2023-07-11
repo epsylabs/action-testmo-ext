@@ -1,0 +1,46 @@
+name: "action-testmo-ext"
+description: "Upload test results to testmo with custom uploader"
+author: "Epsy Engineering <engieering@epsyhealth.com>"
+
+inputs:
+  testmo_user:
+    description: Testmo user to use for automation
+    required: true
+
+  testmo_password:
+    description: Password
+    required: true
+
+  testmo_endpoint:
+    description: Testmo endpoint
+    required: true
+
+  service:
+    description: Name of the service tested
+    required: true
+
+  feature:
+    description: Name of the feature
+    required: true
+
+  feature_link:
+    description: Link to the feature
+    required: true
+
+  pr:
+    description: Link to the PR which was tested
+
+  ci_run:
+    description: Url to CI run
+
+  version:
+    description: Tested version
+
+outputs:
+  run_url:
+    description: URL
+
+
+runs:
+  using: "docker"
+  image: "docker://epsyhealth/action-testmo-ext"

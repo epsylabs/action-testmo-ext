@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "testmo-wcli"
+version = "0.1.0"
+description = ""
+authors = ["Michal Przytulski <michal@przytulski.pl>"]
+readme = "README.md"
+packages = [{include = "testmo_wcli"}]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+requests = "^2.31.0"
+beautifulsoup4 = "^4.12.2"
+click = "^8.1.3"
+mechanicalsoup = "^1.3.0"
+junitparser = "^3.1.0"
+arrow = "^1.2.3"
+loguru = "^0.7.0"
+
+[tool.poetry.scripts]
+twcli = "testmo_wcli.cli:cli"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+line_length = 120
