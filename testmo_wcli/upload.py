@@ -7,18 +7,7 @@ from testmo_wcli.client import TestmoWebClient, MilestoneType
 from testmo_wcli.utils import get_properties
 
 
-@click.command()
-@click.pass_obj
-@click.option("--project-id", help="ID of the testmo project", required=True)
-@click.option("--service", help="Service name", required=True)
-@click.option("--version", help="Version", required=True)
-@click.option("--feature", help="Name of the feature")
-@click.option("--feature-link", help="Link to the feature definition")
-@click.option("--pr", help="PR link")
-@click.option("--ci-run", help="CI run link")
-@click.option("--create-milestone", is_flag=True, default=False, help="Version")
-@click.argument("report", type=click.Path(exists=True))
-def upload(
+def upload_handler(
     client: TestmoWebClient,
     project_id,
     report,
@@ -29,7 +18,9 @@ def upload(
     ci_run,
     feature,
     feature_link,
+    features=features,
 ):
+
     client.login()
 
     name = f"{service} [{version}]"
@@ -40,7 +31,9 @@ def upload(
         parent = milestones.get(feature)
         logger.debug(f"Feature milestone: {parent}")
         if not parent or parent.get("type") != "feature":
-            parent = client.create_milestone(project_id, feature, type=MilestoneType.FEATURE)
+            parent = client.create_milestone(
+                project_id, feature, type=MilestoneType.FEATURE
+            )
 
             logger.debug(f"Created feature milestone: {parent}")
 
@@ -84,9 +77,12 @@ def upload(
         )
         logger.debug(f"Created run: {run}")
 
-    run_time = arrow.now().format('YYYY-MM-DD HH:mm:ss')
+    run_time = arrow.now().format("YYYY-MM-DD HH:mm:ss")
     client.add_run_link(
-        project=project_id, run=run.get("id"), name=f"CI Run [{run_time}]", target=ci_run
+        project=project_id,
+        run=run.get("id"),
+        name=f"CI Run [{run_time}]",
+        target=ci_run,
     )
 
     run_tests = client.get_tests_for_run(run=run.get("id"), project=project_id)
@@ -140,3 +136,43 @@ def upload(
                 result=result.get("result"),
                 source=f"CI [{run_time}] @ " + result.get("source"),
             )
+
+
+@click.command()
+@click.pass_obj
+@click.option("--project-id", help="ID of the testmo project", required=True)
+@click.option("--service", help="Service name", required=True)
+@click.option("--version", help="Version", required=True)
+@click.option("--feature", help="Name of the feature")
+@click.option("--feature-link", help="Link to the feature definition")
+@click.option("--pr", help="PR link")
+@click.option("--ci-run", help="CI run link")
+@click.option("--create-milestone", is_flag=True, default=False, help="Version")
+@click.option("--features", help="Map of the features to include in note")
+@click.argument("report", type=click.Path(exists=True))
+def upload(
+    client: TestmoWebClient,
+    project_id,
+    report,
+    service,
+    version,
+    create_milestone,
+    pr,
+    ci_run,
+    feature,
+    feature_link,
+    features,
+):
+    upload_handler(
+        client=client,
+        project_id=project_id,
+        report=report,
+        service=service,
+        version=version,
+        create_milestone=create_milestone,
+        pr=pr,
+        ci_run=ci_run,
+        feature=feature,
+        feature_link=feature_link,
+        features=features,
+    )

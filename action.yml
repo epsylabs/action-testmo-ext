@@ -3,6 +3,11 @@ description: "Upload test results to testmo with custom uploader"
 author: "Epsy Engineering <engieering@epsyhealth.com>"
 
 inputs:
+  action:
+    description: Name of the action to be executed
+    required: true
+    default: upload
+
   testmo_user:
     description: Testmo user to use for automation
     required: true
@@ -15,17 +20,25 @@ inputs:
     description: Testmo endpoint
     required: true
 
+  project_id:
+    description: Testmo Project ID
+    required: true
+
   service:
     description: Name of the service tested
     required: true
 
   feature:
     description: Name of the feature
-    required: true
+    required: false
 
   feature_link:
     description: Link to the feature
-    required: true
+    required: false
+
+  features:
+    description: Link to the feature
+    required: false
 
   pr:
     description: Link to the PR which was tested
@@ -35,6 +48,9 @@ inputs:
 
   version:
     description: Tested version
+
+  report:
+      description: Report file to be uploaded
 
 outputs:
   run_url:

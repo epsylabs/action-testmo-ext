@@ -15,6 +15,7 @@ mechanicalsoup = "^1.3.0"
 junitparser = "^3.1.0"
 arrow = "^1.2.3"
 loguru = "^0.7.0"
+actions-toolkit = "^0.1.15"
 
 [tool.poetry.scripts]
 twcli = "testmo_wcli.cli:cli"
