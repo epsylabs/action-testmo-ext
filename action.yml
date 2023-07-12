@@ -36,8 +36,8 @@ inputs:
     description: Link to the feature
     required: false
 
-  features:
-    description: Link to the feature
+  issues:
+    description: List of the implemented issues
     required: false
 
   pr:

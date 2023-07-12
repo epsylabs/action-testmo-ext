@@ -1,3 +1,5 @@
+import json
+
 import arrow
 import click
 from junitparser import JUnitXml
@@ -18,42 +20,61 @@ def upload_handler(
     ci_run,
     feature,
     feature_link,
-    features=features,
+    issues,
 ):
 
     client.login()
 
+    logger.debug("Requested milestone creation")
+    milestones = client.get_milestones(project=project_id)
+    parent = None
+
     name = f"{service} [{version}]"
 
-    if create_milestone:
-        logger.debug("Requested milestone creation")
-        milestones = client.get_milestones(project=project_id)
-        parent = milestones.get(feature)
-        logger.debug(f"Feature milestone: {parent}")
-        if not parent or parent.get("type") != "feature":
-            parent = client.create_milestone(
-                project_id, feature, type=MilestoneType.FEATURE
+    parent = milestones.get(feature)
+    logger.debug(f"Feature milestone: {parent}")
+    if not parent or parent.get("type") != "feature":
+        parent = client.create_milestone(
+            project_id, feature, type=MilestoneType.FEATURE
+        )
+
+        logger.debug(f"Created feature milestone: {parent}")
+
+        client.add_milestone_link(
+            project=project_id,
+            milestone=parent.get("id"),
+            name="Feature spec",
+            target=feature_link,
+        )
+
+    milestone = milestones.get(name)
+    logger.debug(f"Version milestone: {milestone}")
+
+    if not milestone:
+        milestone = client.create_milestone(project_id, name=name, parent=parent)
+        logger.debug(f"Created version milestone: {milestone}")
+        client.add_milestone_link(
+            project=project_id,
+            milestone=milestone.get("id"),
+            name="Code changes",
+            target=pr,
+        )
+
+    if issues:
+        links = client.get_milestone_links(
+            project=project_id, milestone=milestone.get("id")
+        )
+        for link_name, link in json.loads(issues).items():
+            logger.debug(
+                f"Adding link: {link_name} :: {link} to milestone: {milestone.get('id')}"
             )
-
-            logger.debug(f"Created feature milestone: {parent}")
-
-            client.add_milestone_link(
-                project=project_id,
-                milestone=parent.get("id"),
-                name="Feature spec",
-                target=feature_link,
-            )
-
-        milestone = milestones.get(name)
-        logger.debug(f"Version milestone: {milestone}")
-        if not milestone:
-            milestone = client.create_milestone(project_id, name=name, parent=parent)
-            logger.debug(f"Created version milestone: {milestone}")
+            if link_name in links:
+                continue
             client.add_milestone_link(
                 project=project_id,
                 milestone=milestone.get("id"),
-                name="Code changes",
-                target=pr,
+                name=link_name,
+                target=link,
             )
 
     tags = client.get_tags(project=project_id)
@@ -69,7 +90,7 @@ def upload_handler(
     if not run:
         run = client.create_run(
             project=project_id,
-            name=name or f"Release candidate: {service}[{version}]",
+            name=name,
             groups=[],
             cases=list(tests.values()),
             milestone=int(milestone.get("id")),
@@ -148,7 +169,7 @@ def upload_handler(
 @click.option("--pr", help="PR link")
 @click.option("--ci-run", help="CI run link")
 @click.option("--create-milestone", is_flag=True, default=False, help="Version")
-@click.option("--features", help="Map of the features to include in note")
+@click.option("--issues", help="Map of the features to include in note")
 @click.argument("report", type=click.Path(exists=True))
 def upload(
     client: TestmoWebClient,
@@ -161,7 +182,7 @@ def upload(
     ci_run,
     feature,
     feature_link,
-    features,
+    issues,
 ):
     upload_handler(
         client=client,
@@ -174,5 +195,5 @@ def upload(
         ci_run=ci_run,
         feature=feature,
         feature_link=feature_link,
-        features=features,
+        issues=issues,
     )

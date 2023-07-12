@@ -69,7 +69,9 @@ class TestmoWebClient:
             self.browser["email"] = self.user or user
             self.browser["password"] = self.password or password
             self.browser.submit_selected()
-            self.csrf = self.browser.page.select_one('meta[name="csrf-token"]').get("content")
+            self.csrf = self.browser.page.select_one('meta[name="csrf-token"]').get(
+                "content"
+            )
         except Exception as e:
             click.secho("Failed to login to testmo", fg="red")
 
@@ -86,13 +88,15 @@ class TestmoWebClient:
             "start_date": "",
         }
 
-        return self.browser.post(
+        response = self.browser.post(
             self.endpoint + f"/milestones/create/{project}",
             json=data,
             headers={
                 "X-CSRF-TOKEN": self.csrf,
             },
-        ).json()
+        )
+
+        return response.json()
 
     def get_milestones(self, project):
         response = self.browser.get(
@@ -107,7 +111,9 @@ class TestmoWebClient:
                 "id": item.get("data-id"),
                 "name": item.get("data-name"),
                 "started": item.get("data-started"),
-                "type": milestone_type(item.select_one(".avatar__text__identifier i").get("class")),
+                "type": milestone_type(
+                    item.select_one(".avatar__text__identifier i").get("class")
+                ),
             }
             for item in response.soup.select(".milestones-list-item")
         }
@@ -116,7 +122,9 @@ class TestmoWebClient:
                 "id": item.get("data-id"),
                 "name": item.get("data-name"),
                 "started": item.get("data-started"),
-                "type": milestone_type(item.select_one(".avatar__text__identifier i").get("class")),
+                "type": milestone_type(
+                    item.select_one(".avatar__text__identifier i").get("class")
+                ),
             }
             for item in response.soup.select(".milestones-sub-list-item")
         }
@@ -152,13 +160,21 @@ class TestmoWebClient:
             },
         )
         tags = BeautifulSoup(
-            response.soup.select_one('div[data-name="repository_cases:tags"]').get("data-condition"),
+            response.soup.select_one('div[data-name="repository_cases:tags"]').get(
+                "data-condition"
+            ),
             "html.parser",
         )
 
-        return {tag.get("data-label").strip(): int(tag.get("data-id").strip()) for tag in tags.select("tr")}
+        return {
+            tag.get("data-label").strip(): int(tag.get("data-id").strip())
+            for tag in tags.select("tr")
+        }
 
     def get_tests_by_tag(self, project, tag):
+        if not tag:
+            return {}
+
         data = {
             "force_group": True,
             "case_id": None,
@@ -183,7 +199,9 @@ class TestmoWebClient:
 
         return {
             t.get("data-name"): int(t.get("data-id"))
-            for t in result.soup.select_one("table[data-target='components--table.table']").select("tr[data-id]")
+            for t in result.soup.select_one(
+                "table[data-target='components--table.table']"
+            ).select("tr[data-id]")
         }
 
     def get_tests_for_run(self, project, run):
@@ -203,7 +221,10 @@ class TestmoWebClient:
             },
         )
 
-        return {t.get("data-id"): t.get("data-name") for t in result.soup.select("tr[data-id]")}
+        return {
+            t.get("data-id"): t.get("data-name")
+            for t in result.soup.select("tr[data-id]")
+        }
 
     def add_test_result(self, test, result, source, reason=None):
         comment = [f"<p>Source: {source}</p>"]
@@ -225,8 +246,9 @@ class TestmoWebClient:
         )
 
     def get_runs(self, project):
-        result = self.browser.get(
-            self.endpoint + f"/runs/{project}",
+        result = self.browser.post(
+            self.endpoint + f"/runs/render_active/{project}",
+            json={"tables": [], "selected": []},
             headers={
                 "X-CSRF-TOKEN": self.csrf,
             },
@@ -235,6 +257,24 @@ class TestmoWebClient:
         return {
             i.get("data-name"): {"id": i.get("data-id"), "name": i.get("data-name")}
             for i in result.soup.select("tr[data-id]")
+        }
+
+    def get_milestone_links(self, project, milestone):
+        result = self.browser.get(
+            self.endpoint + f"/milestones/view/{milestone}",
+            headers={
+                "X-CSRF-TOKEN": self.csrf,
+            },
+        )
+
+        return {
+            i.select_one(".split-resource-list__item__title__content a").text.strip(): {
+                "id": i.get("data-id"),
+                "name": i.select_one(
+                    ".split-resource-list__item__title__content a"
+                ).text.strip(),
+            }
+            for i in result.soup.select("div.split-resource-list__item")
         }
 
     def create_run(

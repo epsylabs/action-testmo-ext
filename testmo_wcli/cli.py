@@ -25,14 +25,16 @@ if __name__ == "__main__":
     if action == "upload":
         upload_handler(
             client=client,
-            project_id=core.get_input("project_id"),
-            report=core.get_input("report"),
-            service=core.get_input("service"),
-            version=core.get_input("version"),
-            create_milestone=core.get_input("create_milestone"),
-            pr=core.get_input("pr"),
-            ci_run=core.get_input("ci_run"),
-            feature=core.get_input("feature"),
-            feature_link=core.get_input("feature_link"),
-            features=core.get_input("features"),
+            project_id=core.get_input("project_id") or getenv("TESTMO_PROJECT_ID"),
+            report=core.get_input("report") or getenv("TESTMO_REPORT"),
+            service=core.get_input("service") or getenv("TESTMO_SERVICE"),
+            version=core.get_input("version") or getenv("TESTMO_VERSION"),
+            create_milestone=core.get_input("create_milestone")
+            or getenv("TESTMO_CREATE_MILESTONE"),
+            pr=core.get_input("pr") or getenv("TESTMO_PR"),
+            ci_run=core.get_input("ci_run") or getenv("TESTMO_CI_RUN"),
+            feature=core.get_input("feature") or getenv("TESTMO_FEATURE"),
+            feature_link=core.get_input("feature_link")
+            or getenv("TESTMO_FEATURE_LINK"),
+            issues=core.get_input("issues") or getenv("TESTMO_ISSUES"),
         )
