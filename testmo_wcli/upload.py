@@ -59,20 +59,6 @@ def upload_handler(
             target=pr,
         )
 
-    if issues:
-        links = client.get_milestone_links(project=project_id, milestone=milestone.get("id"))
-        for link in json.loads(issues).items():
-            link_name = "ISSUE: " + link
-            logger.debug(f"Adding link: {link_name} :: {issues_prefix + link} to milestone: {milestone.get('id')}")
-            if link_name in links:
-                continue
-            client.add_milestone_link(
-                project=project_id,
-                milestone=milestone.get("id"),
-                name=link_name,
-                target=link,
-            )
-
     tags = client.get_tags(project=project_id)
     tests = client.get_tests_by_tag(project_id, tags.get(service))
 
@@ -101,6 +87,25 @@ def upload_handler(
         name=f"CI Run [{run_time}]",
         target=ci_run,
     )
+
+    if issues:
+        links = client.get_run_links(run=run.get("id"))
+        logger.debug(f"Run links: {links}")
+        for link in json.loads(issues.strip("'")):
+            link_name = "ISSUE: " + link
+            target = issues_prefix + link
+            if link_name in links:
+                logger.debug(f"Link already exists: {link_name}")
+                continue
+
+            logger.debug(f"Adding link: {link_name} :: {target} to run: {run.get('id')}")
+
+            client.add_run_link(
+                project=project_id,
+                run=run.get("id"),
+                name=link_name,
+                target=target,
+            )
 
     run_tests = client.get_tests_for_run(run=run.get("id"), project=project_id)
     logger.debug(f"Tests from run: {run_tests}")

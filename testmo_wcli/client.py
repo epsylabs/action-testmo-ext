@@ -69,9 +69,7 @@ class TestmoWebClient:
             self.browser["email"] = self.user or user
             self.browser["password"] = self.password or password
             self.browser.submit_selected()
-            self.csrf = self.browser.page.select_one('meta[name="csrf-token"]').get(
-                "content"
-            )
+            self.csrf = self.browser.page.select_one('meta[name="csrf-token"]').get("content")
         except Exception as e:
             click.secho("Failed to login to testmo", fg="red")
 
@@ -111,9 +109,7 @@ class TestmoWebClient:
                 "id": item.get("data-id"),
                 "name": item.get("data-name"),
                 "started": item.get("data-started"),
-                "type": milestone_type(
-                    item.select_one(".avatar__text__identifier i").get("class")
-                ),
+                "type": milestone_type(item.select_one(".avatar__text__identifier i").get("class")),
             }
             for item in response.soup.select(".milestones-list-item")
         }
@@ -122,9 +118,7 @@ class TestmoWebClient:
                 "id": item.get("data-id"),
                 "name": item.get("data-name"),
                 "started": item.get("data-started"),
-                "type": milestone_type(
-                    item.select_one(".avatar__text__identifier i").get("class")
-                ),
+                "type": milestone_type(item.select_one(".avatar__text__identifier i").get("class")),
             }
             for item in response.soup.select(".milestones-sub-list-item")
         }
@@ -160,16 +154,11 @@ class TestmoWebClient:
             },
         )
         tags = BeautifulSoup(
-            response.soup.select_one('div[data-name="repository_cases:tags"]').get(
-                "data-condition"
-            ),
+            response.soup.select_one('div[data-name="repository_cases:tags"]').get("data-condition"),
             "html.parser",
         )
 
-        return {
-            tag.get("data-label").strip(): int(tag.get("data-id").strip())
-            for tag in tags.select("tr")
-        }
+        return {tag.get("data-label").strip(): int(tag.get("data-id").strip()) for tag in tags.select("tr")}
 
     def get_tests_by_tag(self, project, tag):
         if not tag:
@@ -199,9 +188,7 @@ class TestmoWebClient:
 
         return {
             t.get("data-name"): int(t.get("data-id"))
-            for t in result.soup.select_one(
-                "table[data-target='components--table.table']"
-            ).select("tr[data-id]")
+            for t in result.soup.select_one("table[data-target='components--table.table']").select("tr[data-id]")
         }
 
     def get_tests_for_run(self, project, run):
@@ -221,10 +208,7 @@ class TestmoWebClient:
             },
         )
 
-        return {
-            t.get("data-id"): t.get("data-name")
-            for t in result.soup.select("tr[data-id]")
-        }
+        return {t.get("data-id"): t.get("data-name") for t in result.soup.select("tr[data-id]")}
 
     def add_test_result(self, test, result, source, reason=None):
         comment = [f"<p>Source: {source}</p>"]
@@ -270,9 +254,23 @@ class TestmoWebClient:
         return {
             i.select_one(".split-resource-list__item__title__content a").text.strip(): {
                 "id": i.get("data-id"),
-                "name": i.select_one(
-                    ".split-resource-list__item__title__content a"
-                ).text.strip(),
+                "name": i.select_one(".split-resource-list__item__title__content a").text.strip(),
+            }
+            for i in result.soup.select("div.split-resource-list__item")
+        }
+
+    def get_run_links(self, run):
+        result = self.browser.get(
+            self.endpoint + f"/runs/issues/{run}",
+            headers={
+                "X-CSRF-TOKEN": self.csrf,
+            },
+        )
+
+        return {
+            i.select_one(".split-resource-list__item__title__content a").text.strip(): {
+                "id": i.get("data-id"),
+                "name": i.select_one(".split-resource-list__item__title__content a").text.strip(),
             }
             for i in result.soup.select("div.split-resource-list__item")
         }
