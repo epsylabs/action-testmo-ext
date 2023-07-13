@@ -40,6 +40,10 @@ inputs:
     description: List of the implemented issues
     required: false
 
+  issues_prefix:
+    description: Prefix to generate issue link url
+    required: false
+
   pr:
     description: Link to the PR which was tested
 

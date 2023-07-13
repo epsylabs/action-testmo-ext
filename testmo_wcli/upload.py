@@ -21,6 +21,7 @@ def upload_handler(
     feature,
     feature_link,
     issues,
+    issues_prefix,
 ):
 
     client.login()
@@ -34,9 +35,7 @@ def upload_handler(
     parent = milestones.get(feature)
     logger.debug(f"Feature milestone: {parent}")
     if not parent or parent.get("type") != "feature":
-        parent = client.create_milestone(
-            project_id, feature, type=MilestoneType.FEATURE
-        )
+        parent = client.create_milestone(project_id, feature, type=MilestoneType.FEATURE)
 
         logger.debug(f"Created feature milestone: {parent}")
 
@@ -61,13 +60,10 @@ def upload_handler(
         )
 
     if issues:
-        links = client.get_milestone_links(
-            project=project_id, milestone=milestone.get("id")
-        )
-        for link_name, link in json.loads(issues).items():
-            logger.debug(
-                f"Adding link: {link_name} :: {link} to milestone: {milestone.get('id')}"
-            )
+        links = client.get_milestone_links(project=project_id, milestone=milestone.get("id"))
+        for link in json.loads(issues).items():
+            link_name = "ISSUE: " + link
+            logger.debug(f"Adding link: {link_name} :: {issues_prefix + link} to milestone: {milestone.get('id')}")
             if link_name in links:
                 continue
             client.add_milestone_link(
